@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
 
 	/* init variables */
 	freq = FREQ_START;
-	g_step = freq/FREQ_SAMPLING_RATE;
+	g_step = freq/FREQ_SAMPLING_RATE*2*M_PI;
 	g_run = true;
 
 	/* start sound processing thread */
@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
 	while(true)
 	{
 		/* print current frequency */
-		fprintf(stderr,"\rfreq=%08.2f", freq);
+		fprintf(stderr,"\rfreq = %08.2f Hz", freq);
 
 		/* terminate on button press 'q' or 'x' */
 		if((res = getchar())==EOF)
@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
 						freq = 10;
 					break;
 			}
-		g_step = freq/FREQ_SAMPLING_RATE;
+		g_step = freq/FREQ_SAMPLING_RATE*2*M_PI;
 	}
 
 	/* restore the former settings */

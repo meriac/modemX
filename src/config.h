@@ -6,6 +6,6 @@
 #endif/*FREQ_SAMPLING_RATE*/
 
 #define FREQ_STEP_COARSE 10
-#define FREQ_START 500
+#define FREQ_START 220
 
 #endif/*__CONFIG_H__*/

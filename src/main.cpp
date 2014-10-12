@@ -9,24 +9,69 @@
 
 #define FREQ_MAX_FREQ ((FREQ_SAMPLING_RATE)/2)
 
+#define CARRIER_FREQ (FREQ_SAMPLING_RATE/8)
+#define CYCLES_PER_SYMBOL 4
+#define SYMBOL_PAUSE 16
+
 volatile bool g_run;
 volatile double g_step;
 
+const uint8_t g_hello_world[]="Hello World!\n\r";
+
+static void qam256_enc(uint8_t data, double &phase, double &amplitude)
+{
+	int x,y;
+
+	x = ((data >> 4)      )-8;
+	y = ((data >> 0) & 0xF)-8;
+
+	phase = atan2(y, x);
+	amplitude = sqrt(x*x + y*y)/sqrt(8*8+8*8);
+}
+
 static void* modulator(void *ptr)
 {
-	uint16_t data;
-	double pos,sample;
+	int length, sample;
+	const uint8_t* data;
+	double phase, amplitude, end, pos;
 
 	pos = 0;
 	while(g_run)
 	{
-		sample = sin(pos);
-		pos += g_step;
+		data = g_hello_world;
+		length = sizeof(g_hello_world);
+		while(length--)
+		{
+			/* QAM encode data */
+			qam256_enc(*data++, phase, amplitude);
 
-		/* scale +/- 1 to 16 bit */
-		data = (sample*0x8000)+0x8000;
-		putchar((data >> 0) & 0xFF);
-		putchar((data >> 8) & 0xFF);
+			/* calculate termination sample */
+			end = pos + ((CYCLES_PER_SYMBOL)*2*M_PI);
+			while(pos <= end)
+			{
+				/* calculate wave */
+				sample = ((int)(sin(pos + phase)*amplitude*0x7FFF+0.5))+0x8000;
+
+				/* scale +/- 1 to 16 bit */
+				putchar((sample >> 0) & 0xFF);
+				putchar((sample >> 8) & 0xFF);
+
+				/* get next sample */
+				pos += g_step;
+			}
+		}
+
+		/* emit modulation pause */
+		end = pos + (((SYMBOL_PAUSE)*(CYCLES_PER_SYMBOL))*2*M_PI);
+		while(pos <= end)
+		{
+			/* emit pause */
+			putchar(0x00);
+			putchar(0x80);
+
+			/* get next sample */
+			pos += g_step;
+		}
 	}
 	return NULL;
 }

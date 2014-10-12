@@ -1,4 +1,5 @@
 CXX     :=g++
+SOX     :=sox
 PLAY    :=play
 TARGET  :=modemx
 SOURCES :=src/main.cpp
@@ -45,6 +46,11 @@ $(TARGET): .depend $(OBJS)
 
 play: $(TARGET)
 	./$^ | $(PLAY) -t raw -r $(SAMPLING) -b 16 -c 1 -e unsigned-integer -q -
+
+wav: $(TARGET).wav
+
+$(TARGET).wav: $(TARGET)
+	./$^ | $(SOX) -t raw -r $(SAMPLING) -b 16 -c 1 -e unsigned-integer -q - $@
 
 cleanall: clean
 	rm -f .depend

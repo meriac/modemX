@@ -24,7 +24,7 @@ PREFIX  :=/usr/local
 
 all: $(TARGET)
 
-.PHONY: all install run version cleanall clean
+.PHONY: all install run version cleanall clean wav
 
 version:
 	@echo "$(TARGET) version $(PROGRAM_VERSION)"
@@ -56,6 +56,6 @@ cleanall: clean
 	rm -f .depend
 
 clean:
-	rm -f $(TARGET) $(OBJS) *~
+	rm -f $(TARGET) $(OBJS) $(TARGET).wav *~
 
 include .depend

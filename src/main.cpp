@@ -9,9 +9,6 @@
 #include "crypto.h"
 #include "config.h"
 
-#define FREQ_MAX_FREQ ((FREQ_SAMPLING_RATE)/2)
-#define LOOP_SIZE 64
-
 volatile bool g_run;
 const uint8_t g_src_data[LOOP_SIZE]="Hello World!\n\r";
 uint8_t g_dst_data[LOOP_SIZE];

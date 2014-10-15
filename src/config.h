@@ -1,12 +1,11 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#ifndef FREQ_SAMPLING_RATE
-#define FREQ_SAMPLING_RATE 44100
-#endif/*FREQ_SAMPLING_RATE*/
+#define LOOP_SIZE 64
 
 #define FREQ_STEP_COARSE 10
 #define FREQ_START 440
+#define FREQ_MAX_FREQ ((FREQ_SAMPLING_RATE)/2)
 
 #define CYCLES_PER_SYMBOL 4
 #define SYMBOL_PAUSE 16

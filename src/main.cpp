@@ -41,11 +41,14 @@ static void* modulator(void *ptr)
 	int i, sample;
 	uint16_t noise;
 	TCryptoEngine prng;
+	double modulation;
 
 	memset(&prng, 0, sizeof(prng));
 
 	while(g_run)
 	{
+		modulation = modulate();
+
 		/* AES encrypt block, result in 'out' */
 		aes(&prng);
 		/* make AES output the IV of the next encryption */
@@ -58,7 +61,7 @@ static void* modulator(void *ptr)
 
 			/* modulate data on noise */
 			sample = 0x8000 +
-				modulate() * (((int)(noise & 0x7F)) - 0x40);
+				(modulation * (((int)(noise & 0x7F)) - 0x40));
 
 			/* scale +/- 1 to 16 bit */
 			putchar((sample >> 0) & 0xFF);

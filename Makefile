@@ -2,7 +2,7 @@ CXX     :=g++
 SOX     :=sox
 PLAY    :=play
 TARGET  :=modemx
-SOURCES :=src/main.cpp
+SOURCES :=src/main.cpp src/crypto.cpp
 
 LIBS    :=-lm -pthread
 

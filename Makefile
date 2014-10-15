@@ -6,7 +6,7 @@ SOURCES :=src/main.cpp src/crypto.cpp
 
 LIBS    :=-lm -pthread
 
-SAMPLING:=44100
+SAMPLING:=48000
 
 # determine program version
 PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)

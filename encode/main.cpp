@@ -64,7 +64,6 @@ static void bailout(const char* msg)
 	exit(EXIT_FAILURE);
 }
 
-#ifdef  WHITENING
 static void aes_encrypt(void)
 {
 	uint8_t t, i, *dst, length;
@@ -97,7 +96,6 @@ static void aes_encrypt(void)
 			*dst++ = whitening_key.out[i] ^ *src++;
 	}
 }
-#endif/*WHITENING*/
 
 int main(int argc, char * argv[])
 {
@@ -112,11 +110,7 @@ int main(int argc, char * argv[])
 	g_data_pos = 0;
 
 	/* whiten data before transmit */
-#ifdef  WHITENING
 	aes_encrypt();
-#else /*WHITENING*/
-	memcpy(g_dst_data, g_src_data, LOOP_SIZE);
-#endif/*WHITENING*/
 
 	/* start sound processing thread */
 	if((res = pthread_create(&thread, NULL, &modulator, NULL)))

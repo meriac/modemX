@@ -1,8 +1,8 @@
 CXX     :=g++
 SOX     :=sox
 PLAY    :=play
-TARGET  :=modemx
-SOURCES :=src/main.cpp src/crypto.cpp
+TARGET  :=encode
+SOURCES :=main.cpp ../core/crypto.cpp
 
 LIBS    :=-lm -pthread
 
@@ -16,7 +16,7 @@ endif
 
 DEBUG   :=-O3
 CXXOPT  :=$(DEBUG)
-CXXFLAGS:=-Werror -Wall -DFREQ_SAMPLING_RATE=$(SAMPLING) -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -DPROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
+CXXFLAGS:=-I../core -Werror -Wall -DFREQ_SAMPLING_RATE=$(SAMPLING) -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -DPROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
 LDFLAGS :=$(LIBS)
 OBJS    :=$(SOURCES:%.cpp=%.o)
 LOGJSON :=$(LOGFILE:%.bin=%.json.bz2)

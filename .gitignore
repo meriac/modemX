@@ -28,6 +28,5 @@
 *.x86_64
 *.hex
 
-modemx
 .depend
 *.wav

@@ -16,19 +16,11 @@ uint32_t g_data_pos;
 
 static double modulate(void)
 {
-
 	int byte, bits;
 
 	bits = (g_data_pos&3)*2;
-	byte = g_data_pos >> 2;
-	if(byte>=LOOP_SIZE)
-	{
-		g_data_pos=0;
-		bits = 0;
-		byte = 0;
-	}
-	else
-		g_data_pos++;
+	byte = (g_data_pos >> 2) % LOOP_SIZE;
+	g_data_pos++;
 
 	return ((g_dst_data[byte]>>bits) & 0x3)/3.0;
 }

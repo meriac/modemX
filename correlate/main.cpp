@@ -16,10 +16,12 @@
 #define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ)
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
 
-static double g_pos, g_step;
-static uint16_t g_buffer[SAMPLES_PER_SYMBOL];
+#define CORRELATOR_COUNT 2
 
-void symbol(uint8_t data, uint16_t* dst)
+static double g_pos, g_step;
+static int16_t g_buffer[SAMPLES_PER_SYMBOL];
+
+void symbol(uint8_t data, int16_t* dst)
 {
 	int i,j,k,bit;
 	double phase;
@@ -46,7 +48,7 @@ void symbol(uint8_t data, uint16_t* dst)
 			for(k=0; k<(CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE); k++)
 			{
 				/* calculate wave */
-				*dst++ = (int)(sin(g_pos + phase)*0x3FFF+0.5)+0x8000;
+				*dst++ = (int)(sin(g_pos + phase)*0x3FFF+0.5);
 				g_pos += g_step;
 			}
 		}
@@ -56,7 +58,7 @@ void symbol(uint8_t data, uint16_t* dst)
 int main(int argc, char * argv[])
 {
 	int i,j,t;
-	uint16_t sample;
+	int16_t sample;
 
 	g_pos = 0;
 	g_step = (2*M_PI*CARRIER_FREQ)/FREQ_SAMPLING_RATE;

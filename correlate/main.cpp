@@ -18,19 +18,21 @@
 
 #define SYMBOL_COUNT 2
 
-static double g_pos, g_step;
 static int16_t g_symbol[SYMBOL_COUNT][SAMPLES_PER_SYMBOL];
 
-void symbol(uint8_t data, int16_t* dst)
+void symbol(double freq, uint8_t data, int16_t* dst)
 {
 	int i,j,k,bit;
-	double phase;
+	double phase, pos, step;
 	TCryptoEngine prng;
 
 	/* FIXME: initialize with proper key */
 	memset(&prng, 0, sizeof(prng));
 	/* seed code */
 	prng.in[0] = data;
+
+	pos = 0;
+	step = (2*M_PI*freq)/FREQ_SAMPLING_RATE;
 
 	for(i=0; i<AES_BLOCKS; i++)
 	{
@@ -48,8 +50,8 @@ void symbol(uint8_t data, int16_t* dst)
 			for(k=0; k<(CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE); k++)
 			{
 				/* calculate wave */
-				*dst++ = (int)(sin(g_pos + phase)*0x3FFF+0.5);
-				g_pos += g_step;
+				*dst++ = (int)(sin(pos + phase)*0x7FFF+0.5);
+				pos += step;
 			}
 		}
 	}
@@ -61,19 +63,16 @@ int main(int argc, char * argv[])
 	int16_t sample;
 
 	/* init correlators */
-	for(t=0; t<2; t++)
-		symbol(t, g_symbol[t]);
-
-	g_pos = 0;
-	g_step = (2*M_PI*CARRIER_FREQ)/FREQ_SAMPLING_RATE;
+	for(j=0; j<2; j++)
+		symbol(CARRIER_FREQ, j, g_symbol[j]);
 
 	for(t=0; t<128; t++)
 	{
-		for(j=0; j<2; j++)
+		for(j=0; j<SYMBOL_COUNT; j++)
 		{
 			for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 			{
-				sample = g_symbol[j][i];
+				sample = g_symbol[j][i]/2;
 				putchar((sample >> 0) & 0xFF);
 				putchar((sample >> 8) & 0xFF);
 			}

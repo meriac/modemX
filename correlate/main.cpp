@@ -19,9 +19,9 @@
 static double g_pos, g_step;
 static uint16_t g_buffer[SAMPLES_PER_SYMBOL];
 
-int symbol(uint8_t data, uint16_t* dst)
+void symbol(uint8_t data, uint16_t* dst)
 {
-	int i,j,k,bit,res;
+	int i,j,k,bit;
 	double phase;
 	TCryptoEngine prng;
 
@@ -30,7 +30,6 @@ int symbol(uint8_t data, uint16_t* dst)
 	/* seed code */
 	prng.in[0] = data;
 
-	res = 0;
 	for(i=0; i<AES_BLOCKS; i++)
 	{
 		/* run encryption */
@@ -49,16 +48,14 @@ int symbol(uint8_t data, uint16_t* dst)
 				/* calculate wave */
 				*dst++ = (int)(sin(g_pos + phase)*0x3FFF+0.5)+0x8000;
 				g_pos += g_step;
-				res++;
 			}
 		}
 	}
-	return res;
 }
 
 int main(int argc, char * argv[])
 {
-	int i,j,t, res;
+	int i,j,t;
 	uint16_t sample;
 
 	g_pos = 0;
@@ -68,8 +65,8 @@ int main(int argc, char * argv[])
 	{
 		for(j=0; j<2; j++)
 		{
-			res = symbol(j, g_buffer);
-			for(i=0; i<res; i++)
+			symbol(j, g_buffer);
+			for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 			{
 				sample = g_buffer[i];
 				putchar((sample >> 0) & 0xFF);

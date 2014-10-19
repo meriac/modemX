@@ -7,11 +7,11 @@
 
 #include "crypto.h"
 
-#define CODE_BITS 2048
+#define CODE_BITS 128
 #define AES_BLOCKS (CODE_BITS/(AES_BLOCK_SIZE*8))
 
 #define CARRIER_FREQ (FREQ_SAMPLING_RATE/8)
-#define CYCLES_PER_SYMBOL 4
+#define CYCLES_PER_SYMBOL 64
 
 #define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ)
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
@@ -99,8 +99,10 @@ int main(int argc, char * argv[])
 				aes(&noise);
 				memcpy(noise.in, noise.out, AES_BLOCK_SIZE);
 			}
+			/* extract noise from AES stream in 16 bit steps */
 			n = ((int16_t*)&noise.out)[n];
 
+			/* add noise to attenuated symbol */
 			*p++ = g_symbol[t&1][i]/64 + (n/2);
 		}
 

@@ -7,34 +7,33 @@
 
 #include "crypto.h"
 
-#define CODE_BITS 128
+#define CODE_BITS 512
 #define AES_BLOCKS (CODE_BITS/(AES_BLOCK_SIZE*8))
 
-#define CARRIER_FREQ (FREQ_SAMPLING_RATE/8)
-#define CYCLES_PER_SYMBOL 64
+#define CARRIER_FREQ_CENTER 880
+#define CARRIER_FREQ_MOD 50
+#define CYCLES_PER_SYMBOL 2
 
-#define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ)
+#define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ_CENTER)
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
 
 #define SYMBOL_COUNT 2
 #define TEST_REPEAT 16
 
+double g_pos;
 static int16_t g_symbol[SYMBOL_COUNT][SAMPLES_PER_SYMBOL];
 static int16_t g_test_signal[TEST_REPEAT*SAMPLES_PER_SYMBOL];
 
-void symbol(double freq, uint8_t data, int16_t* dst)
+void symbol(uint8_t data, int16_t* dst)
 {
 	int i,j,k,bit;
-	double phase, pos, step;
+	double step;
 	TCryptoEngine prng;
 
 	/* FIXME: initialize with proper key */
 	memset(&prng, 0, sizeof(prng));
 	/* seed code */
 	prng.in[0] = data;
-
-	pos = 0;
-	step = (2*M_PI*freq)/FREQ_SAMPLING_RATE;
 
 	for(i=0; i<AES_BLOCKS; i++)
 	{
@@ -47,13 +46,15 @@ void symbol(double freq, uint8_t data, int16_t* dst)
 		for(j=0; j<(AES_BLOCK_SIZE*8); j++)
 		{
 			bit = (prng.out[j>>3] >> (j&7)) & 1;
-			phase = bit * M_PI;
+			step = (2*M_PI*(CARRIER_FREQ_CENTER +
+				(bit ? CARRIER_FREQ_MOD : -CARRIER_FREQ_MOD)
+			))/FREQ_SAMPLING_RATE;
 
 			for(k=0; k<(CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE); k++)
 			{
 				/* calculate wave */
-				*dst++ = (int)(sin(pos + phase)*0x7FFF+0.5);
-				pos += step;
+				*dst++ = (int)(sin(g_pos)*0x7FFF+0.5);
+				g_pos += step;
 			}
 		}
 	}
@@ -78,18 +79,30 @@ int main(int argc, char * argv[])
 {
 	int i,j,t,n;
 	int16_t *p, r0, r1, r2;
+	int16_t modulation[SAMPLES_PER_SYMBOL];
 	TCryptoEngine noise;
+
+	fprintf(stderr, "SAMPLES_PER_SYMBOL=%i\n\r", SAMPLES_PER_SYMBOL);
 
 	/* set up noise generator */
 	memset(&noise, 0, sizeof(noise));
 
 	/* init correlators */
 	for(j=0; j<SYMBOL_COUNT; j++)
-		symbol(CARRIER_FREQ, j, g_symbol[j]);
+	{
+		/* start on same phase for every symbol */
+		g_pos = 0;
+		symbol(j, g_symbol[j]);
+	}
 
 	j = 0;
+	g_pos = 0;
 	p = g_test_signal;
 	for(t=0; t<TEST_REPEAT; t++)
+	{
+		/* calculate next symbol - alternate between 0/1 */
+		symbol(t&1, modulation);
+
 		for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 		{
 			n = j % (AES_BLOCK_SIZE/2);
@@ -103,8 +116,9 @@ int main(int argc, char * argv[])
 			n = ((int16_t*)&noise.out)[n];
 
 			/* add noise to attenuated symbol */
-			*p++ = g_symbol[t&1][i]/64 + (n/2);
+			*p++ = modulation[i]/64 + (n/2);
 		}
+	}
 
 	p = g_test_signal;
 	for(t=0; t<(TEST_REPEAT-1); t++)

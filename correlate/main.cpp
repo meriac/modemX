@@ -7,11 +7,11 @@
 
 #include "crypto.h"
 
-#define CODE_BITS 1024
+#define CODE_BITS 2048
 #define AES_BLOCKS (CODE_BITS/(AES_BLOCK_SIZE*8))
 
 #define CARRIER_FREQ (FREQ_SAMPLING_RATE/8)
-#define CYCLES_PER_SYMBOL 2
+#define CYCLES_PER_SYMBOL 4
 
 #define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ)
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
@@ -69,24 +69,40 @@ int correlate(uint8_t data, int16_t* dst)
 	src = g_symbol[data];
 	for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 		sum += (*src++)*(int)(*dst++);
-	sum/=(SAMPLES_PER_SYMBOL*0x10UL);
+	sum/=(SAMPLES_PER_SYMBOL*0x100UL);
 
 	return sum;
 }
 
 int main(int argc, char * argv[])
 {
-	int i,j,t;
+	int i,j,t,n;
 	int16_t *p, r0, r1, r2;
+	TCryptoEngine noise;
+
+	/* set up noise generator */
+	memset(&noise, 0, sizeof(noise));
 
 	/* init correlators */
-	for(j=0; j<2; j++)
+	for(j=0; j<SYMBOL_COUNT; j++)
 		symbol(CARRIER_FREQ, j, g_symbol[j]);
 
+	j = 0;
 	p = g_test_signal;
 	for(t=0; t<TEST_REPEAT; t++)
 		for(i=0; i<SAMPLES_PER_SYMBOL; i++)
-			*p++ = g_symbol[t&1][i]/2048;
+		{
+			n = j % (AES_BLOCK_SIZE/2);
+			j++;
+			if(n==0)
+			{
+				aes(&noise);
+				memcpy(noise.in, noise.out, AES_BLOCK_SIZE);
+			}
+			n = ((int16_t*)&noise.out)[n];
+
+			*p++ = g_symbol[t&1][i]/64 + (n/2);
+		}
 
 	p = g_test_signal;
 	for(t=0; t<(TEST_REPEAT-1); t++)

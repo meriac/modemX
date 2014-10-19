@@ -17,8 +17,10 @@
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
 
 #define SYMBOL_COUNT 2
+#define TEST_REPEAT 16
 
 static int16_t g_symbol[SYMBOL_COUNT][SAMPLES_PER_SYMBOL];
+static int16_t g_test_signal[TEST_REPEAT*SAMPLES_PER_SYMBOL];
 
 void symbol(double freq, uint8_t data, int16_t* dst)
 {
@@ -57,25 +59,48 @@ void symbol(double freq, uint8_t data, int16_t* dst)
 	}
 }
 
+int correlate(uint8_t data, int16_t* dst)
+{
+	int i;
+	int16_t *src;
+	uint64_t sum;
+
+	sum = 0;
+	src = g_symbol[data];
+	for(i=0; i<SAMPLES_PER_SYMBOL; i++)
+		sum += (*src++)*(int)(*dst++);
+	sum/=(SAMPLES_PER_SYMBOL*0x10UL);
+
+	return sum;
+}
+
 int main(int argc, char * argv[])
 {
 	int i,j,t;
-	int16_t sample;
+	int16_t *p, r0, r1, r2;
 
 	/* init correlators */
 	for(j=0; j<2; j++)
 		symbol(CARRIER_FREQ, j, g_symbol[j]);
 
-	for(t=0; t<128; t++)
-	{
-		for(j=0; j<SYMBOL_COUNT; j++)
+	p = g_test_signal;
+	for(t=0; t<TEST_REPEAT; t++)
+		for(i=0; i<SAMPLES_PER_SYMBOL; i++)
+			*p++ = g_symbol[t&1][i]/2048;
+
+	p = g_test_signal;
+	for(t=0; t<(TEST_REPEAT-1); t++)
+		for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 		{
-			for(i=0; i<SAMPLES_PER_SYMBOL; i++)
-			{
-				sample = g_symbol[j][i]/2;
-				putchar((sample >> 0) & 0xFF);
-				putchar((sample >> 8) & 0xFF);
-			}
+			r1 = (int16_t)correlate(0, p);
+			r2 = (int16_t)correlate(1, p);
+			r0 = *p++;
+
+			putchar((r0 >> 0) & 0xFF);
+			putchar((r0 >> 8) & 0xFF);
+			putchar((r1 >> 0) & 0xFF);
+			putchar((r1 >> 8) & 0xFF);
+			putchar((r2 >> 0) & 0xFF);
+			putchar((r2 >> 8) & 0xFF);
 		}
-	}
 }

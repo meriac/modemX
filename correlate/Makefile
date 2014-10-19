@@ -45,12 +45,12 @@ $(TARGET): .depend $(OBJS)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -c $< -o $@
 
 play: $(TARGET)
-	./$^ | $(PLAY) -t raw -r $(SAMPLING) -b 16 -c 1 -e signed-integer -q -
+	./$^ | $(PLAY) -t raw -r $(SAMPLING) -b 16 -c 3 -e signed-integer -q -
 
 wav: $(TARGET).wav
 
 $(TARGET).wav: $(TARGET)
-	./$^ | $(SOX) -t raw -r $(SAMPLING) -b 16 -c 1 -e signed-integer -q - $@
+	./$^ | $(SOX) -t raw -r $(SAMPLING) -b 16 -c 3 -e signed-integer -q - $@
 
 cleanall: clean
 	rm -f .depend

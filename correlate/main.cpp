@@ -128,8 +128,8 @@ int main(int argc, char * argv[])
 	for(t=0; t<(TEST_REPEAT-1); t++)
 		for(i=0; i<SAMPLES_PER_SYMBOL; i++)
 		{
-			r1 = (int16_t)abs(correlate(0, p));
-			r2 = (int16_t)abs(correlate(1, p));
+			r1 = (int16_t)correlate(0, p);
+			r2 = (int16_t)correlate(1, p);
 			r0 = *p++;
 
 			putchar((r0 >> 0) & 0xFF);

@@ -14,6 +14,10 @@
 #define CARRIER_FREQ_MOD 50
 #define CYCLES_PER_SYMBOL 2
 
+#ifndef NOISE
+#define NOISE 0.5
+#endif/*NOISE*/
+
 #define SAMPLES_PER_CYCLE (FREQ_SAMPLING_RATE/CARRIER_FREQ_CENTER)
 #define SAMPLES_PER_SYMBOL (AES_BLOCKS*AES_BLOCK_SIZE*8*CYCLES_PER_SYMBOL*SAMPLES_PER_CYCLE)
 
@@ -116,7 +120,7 @@ int main(int argc, char * argv[])
 			n = ((int16_t*)&noise.out)[n];
 
 			/* add noise to attenuated symbol */
-			*p++ = modulation[i]/64 + (n/2);
+			*p++ = modulation[i]/64 + (n*NOISE);
 		}
 	}
 
